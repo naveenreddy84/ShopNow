@@ -12,16 +12,28 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> login() async {
     try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
+      if (email.isEmpty || password.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Email and password cannot be empty.")),
+        );
+        return;
+      }
+
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: email,
+        password: password,
       );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Login Successful!")),
       );
       Navigator.pushReplacementNamed(context, "/HomePage");
     } on FirebaseAuthException catch (e) {
       String errorMessage;
+
       if (e.code == 'user-not-found') {
         errorMessage = "No user found with this email.";
       } else if (e.code == 'wrong-password') {
@@ -29,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         errorMessage = "An error occurred. Please try again.";
       }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $errorMessage")),
       );
@@ -39,7 +52,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,19 +59,22 @@ class _LoginPageState extends State<LoginPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: _emailController,
               decoration: InputDecoration(labelText: "Email"),
+              keyboardType: TextInputType.emailAddress,
             ),
+            SizedBox(height: 16),
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 32),
             ElevatedButton(
-              onPressed:login,
+              onPressed: login,
               child: Text("Login"),
             ),
             TextButton(
@@ -73,4 +88,14 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 }
+
+
+
